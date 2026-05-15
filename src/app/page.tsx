@@ -5,12 +5,20 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) router.push("/dashboard");
-  }, [user, router]);
+    if (!loading && user) router.push("/dashboard");
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-crimson-200 border-t-crimson-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4">

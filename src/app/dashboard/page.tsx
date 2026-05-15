@@ -6,14 +6,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "../AuthProvider";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user, router]);
+    if (!loading && !user) router.push("/login");
+  }, [user, loading, router]);
 
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="size-8 animate-spin rounded-full border-4 border-crimson-200 border-t-crimson-600" />

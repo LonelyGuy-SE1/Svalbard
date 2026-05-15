@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "../AuthProvider";
 
 export default function Login() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) router.push("/dashboard");
+  }, [user, authLoading, router]);
 
   const send = async () => {
     if (loading) return;
@@ -15,7 +24,10 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-    const { error: err } = await supabase.auth.signInWithOtp({ email });
+    const { error: err } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
 
     if (err) {
       setError(err.message);
@@ -25,6 +37,14 @@ export default function Login() {
       setTimeout(() => setLoading(false), 60000);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-crimson-200 border-t-crimson-600" />
+      </div>
+    );
+  }
 
   if (sent) {
     return (
