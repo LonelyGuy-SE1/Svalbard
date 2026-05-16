@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 
 type AuthContextValue = {
   user: User | null;
@@ -20,15 +20,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
 
+      let session: Session | null = null;
+
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code).catch(() => {});
+        const { data } = await supabase.auth
+          .exchangeCodeForSession(code)
+          .catch(() => ({ data: { session: null as Session | null } }));
+        session = data?.session ?? null;
         window.history.replaceState({}, "", window.location.pathname);
       }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) setUser(session.user);
+      if (!session) {
+        const {
+          data: { session: s },
+        } = await supabase.auth.getSession();
+        session = s;
+      }
+
+      if (session) {
+        setUser(session.user);
+        await supabase.auth.setSession(session);
+      }
+
       setLoading(false);
     };
 
